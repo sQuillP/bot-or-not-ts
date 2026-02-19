@@ -1,4 +1,9 @@
 import { Zap, Bot, User, Trophy } from "lucide-react";
+
+
+
+// Home page, probably just change out buttons for links for 
+// solid SSR performance and such.
 export default function Home() {
   return (
    <main className="h-screen flex items-center justify-center">
