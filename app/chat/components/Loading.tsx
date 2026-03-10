@@ -36,8 +36,9 @@ export function Loading({loadingState = "connecting"}: {loadingState: ModalLoadi
             <DialogContent className="bg-bg-primary">
                 <DialogTitle hidden></DialogTitle>
                 <div className="flex flex-col items-center justify-center">
+                    {/* Loading icon with glow effect */}
                     <div className="rounded-full border-teal border-4 p-4 border-box">
-                         <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
+                    <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
                     <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-pulse" />
                         {loadingStateIcons[loadingState]}
                     </div>
