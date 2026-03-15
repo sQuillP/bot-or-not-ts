@@ -31,8 +31,9 @@ export default function useTimer({
         }
     }, [passedTime, totalTime]);
 
-    useEffect(()=> {
 
+    //Reset the timer whenever the total time changes
+    useEffect(()=> {
         interval.current = setInterval(() => {
             setPassedTime((prev) => prev + 1);
         }, 1000); 
@@ -41,12 +42,13 @@ export default function useTimer({
             if(interval.current) {
                 clearInterval(interval.current);
                 interval.current = null;
+                setPassedTime(0);
             }
         }
     },[totalTime]);
 
     return {
-        count: direction === 'backward' ? totalTime - passedTime : passedTime,
+        count: passedTime,
         completed: passedTime >= totalTime,
     }
 }

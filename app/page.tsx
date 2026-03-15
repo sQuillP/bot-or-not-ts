@@ -22,15 +22,15 @@ export default function Home() {
         </h1>
         <p className='text-center text-gray-400 text-lg '>You&apos;ll be matched with a mystery partner. Chat with them, then guess — are you talking to a real person or an AI?</p>
         <div className="my-5 flex items-center justify-center gap-4">
-          <div className="w-40 py-3 text-center rounded-lg bg-card-bg border-card-border border-2">
+          <div className="w-55 py-3 text-center rounded-lg bg-card-bg border-card-border border-2">
             <Zap className="mx-auto mb-2 text-teal" size={32} />
             <p className="text-gray-400">Competitive</p>
           </div>
-          <div className="w-40 py-3 text-center rounded-lg bg-card-bg border-card-border border-2">
+          <div className="w-55 py-3 text-center rounded-lg bg-card-bg border-card-border border-2">
               <Bot className="mx-auto mb-2 text-teal" size={32} />
             <p className="text-gray-400">Bust the bots</p>
           </div>
-          <div className="w-40 py-3 text-center rounded-lg bg-card-bg border-card-border border-2">
+          <div className="w-55 py-3 text-center rounded-lg bg-card-bg border-card-border border-2">
             <User className="mx-auto mb-2 text-teal" size={32} />
             <p className="text-gray-400">Outsmart your opponent</p>
           </div>

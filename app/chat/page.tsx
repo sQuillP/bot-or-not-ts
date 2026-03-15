@@ -28,11 +28,14 @@ export default function ChatPage() {
      * 
      */
     return (
-        <main className="h-screen bg-bg-primary">
+        
+        <main className="h-screen  bg-bg-primary">
+            {/* <div className="bg-bg-primary  max-w-[800px] m-auto"> */}
 
             {/* <Loading loadingState={states[counter]}/> */}
-            <Chat/>
+                <Chat/>
 
+            {/* </div> */}
 
         </main>
     )
