@@ -17,25 +17,6 @@ export default function Chat() {
 
     const [openDisconnectModal, setOpenDisconnectModal] = useState<boolean>(false);
 
-    /**
-     * game state:
-     * 
-     * win - guess the other identity
-     * win - other player incorrectly guesses your identity
-     * win - other player forfeits
-     * 
-     * lose - you guess the other identity wrong
-     * lose - other player correctly guesses your identity
-     * lose - you forfeit
-     * 
-     * 
-     * is the game over?
-     * 
-     * then what's the state.
-     * 
-     * game over ? 
-     * 
-     */
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
