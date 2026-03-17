@@ -15,10 +15,10 @@ export interface PlayerData {
 // Individual rooms for the app.
 export interface ChatRoom {
     public: {
-        messages: {[messageId:string]:RoomMessage},
+        messages?: {[messageId:string]:RoomMessage},
         occupancy: number;
         gameFinished: boolean;
-        winner: string | null;
+        winner?: string;
         gameReady: boolean;
     },
     restricted: {

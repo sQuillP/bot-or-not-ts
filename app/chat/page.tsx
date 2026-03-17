@@ -7,9 +7,7 @@ import useGame from "@/hooks/useGame";
 const states = ["connecting", "finding_game", "game_found"] as const;
 export default function ChatPage() {
 
-    const [counter, setCounter] = useState(0);
 
-    const gameState = useGame();
 
     
    
@@ -17,7 +15,6 @@ export default function ChatPage() {
         
         <main className="h-screen  bg-bg-primary">
 
-                <Loading loadingState={states[counter]}/>
                 <Chat/>
 
 

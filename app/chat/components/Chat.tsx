@@ -12,11 +12,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {useRouter} from "next/navigation";
+import useGame from "@/hooks/useGame";
+import { RoomMessage } from "@/types/server.types";
 
 export default function Chat() {
 
     const [openDisconnectModal, setOpenDisconnectModal] = useState<boolean>(false);
-
+    const [chatMessage, setChatMessage] = useState<string>('');
+    const {messages, roomId, userId, sendMessage } = useGame();
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -38,8 +41,11 @@ export default function Chat() {
             <ChatHeader totalTime={10} onTriggerDisconnect={() => setOpenDisconnectModal(true)} onComplete={()=> null}/>
             <section ref={scrollRef} className="h-full overflow-y-auto scrollbar-none  [&::-webkit-scrollbar]:hidden">
                 <div className="space-y-4 p-3">
-                    {/* This is where you are going to render your messages.... */}
-                    {Array.from({length: 25}).map((_, i) => (<ChatBubble key={i} text={`Message ${i + 1}`} isMe={i % 2 === 0} />))}
+                    {
+                        messages.map((message:RoomMessage) => {
+                            return <ChatBubble key={message.created} isMe={false} text={message.message}/>
+                        })
+                    }
                 </div>
             </section>
             <section className="">
@@ -58,8 +64,8 @@ export default function Chat() {
                     </button>
                 </div>
                 <div className="flex flex-row p-3 border-box gap-2 bg-card-bg border-t-2">
-                    <textarea placeholder="Type your message here..." className="focus:border-teal focus:outline-none w-full bg-card-bg text-black rounded outline-hidden text-white p-3 border-box resize-none border-2 transition mr-1" />
-                    <button className="rounded bg-teal w-19 h-19 m-auto cursor-pointer"><Send className="m-auto"/></button>
+                    <textarea value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} placeholder="Type your message here..." className="focus:border-teal focus:outline-none w-full bg-card-bg text-black rounded outline-hidden text-white p-3 border-box resize-none border-2 transition mr-1" />
+                    <button onClick={()=> sendMessage(chatMessage)} className="rounded bg-teal w-19 h-19 m-auto cursor-pointer"><Send className="m-auto"/></button>
                 </div>
             </section>
             <Dialog open={openDisconnectModal} onOpenChange={setOpenDisconnectModal}>

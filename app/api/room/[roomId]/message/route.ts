@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { RoomMessage } from "@/types/server.types";
+import firebase from '@/lib/firebaseAdmin';
 
 export async function POST(
     request:NextRequest, 
@@ -8,10 +9,13 @@ export async function POST(
         const body:RoomMessage = await request.json();
         const {roomId} = await params;
 
-        // append the message to the list, update the turn
-        // of the game.
-        // const roomData = 
+        console.log('in room message::: ', body, roomId);
 
+        // we can verify that this person belongs to the room.
+        // append the message to the list, update the turn
+
+        const dbRef = firebase.ref(`/chat/rooms/${roomId}/public/messages`);
+        await dbRef.push(body);
 
         return NextResponse.json({data:'ok'}, {status:200});
     } catch(error) {
