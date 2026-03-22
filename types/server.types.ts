@@ -8,7 +8,7 @@ export interface RoomMessage {
 }
 
 export interface PlayerData {
-    joined: number;
+    joined: string;
 }
 
 
@@ -20,6 +20,7 @@ export interface ChatRoom {
         gameFinished: boolean;
         winner?: string;
         gameReady: boolean;
+        currentTurn: string;
     },
     restricted: {
         isBotRoom: boolean;

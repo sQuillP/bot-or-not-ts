@@ -1,6 +1,6 @@
 import { connectToRoom } from "@/lib/axios";
-import { DatabaseReference, off, onValue, push, ref } from "firebase/database";
-import { useEffect, useState } from "react";
+import { DatabaseReference, off, onValue, ref, Unsubscribe } from "firebase/database";
+import { useEffect, useRef, useState } from "react";
 import chatClient from "@/lib/firebase";
 import { ChatRoom, RoomMessage } from "@/types/server.types";
 import axios from "axios";
@@ -25,6 +25,8 @@ export default function useGame():UseGameResult {
     const [roomId, setRoomId] = useState<string>('');
     const [userId, setUserId] = useState<string>('');
     const [connected, setConnected] = useState<boolean>(false);
+    const connectionRef = useRef<boolean>(false);
+    const unsubscribeRef= useRef<Unsubscribe | null>(null);
 
 
     async function sendMessage(textMessage: string):Promise<void> {
@@ -36,25 +38,28 @@ export default function useGame():UseGameResult {
             };
             await axios.post<RoomMessage>(`/api/room/${roomId}/message`, roomMessage);
         } catch(error) {
-            console.error('Unable to send room message');
+            console.error('Unable to send room message', error);
         }
     }
     
 
     useEffect(()=> {
-        let room:DatabaseReference;
+        // Prevent unnecessary connections even in dev mode.
+        if(connectionRef.current) return;
+        connectionRef.current = true;
+
+
         (async ()=> {
             try {
                 const {roomId, userId} = await connectToRoom();
-                console.log(roomId, userId);
                 if(roomId === '') {
                     console.error("Something went wrong...");
                     return;
                 }
-                room = ref(chatClient, `chat/rooms/${roomId}/public`);
-
-                //Listen to incoming messages...
-                onValue(room, (snapshot) => {
+                const room = ref(chatClient, `chat/rooms/${roomId}/public`);
+                //Listen to incoming messages... we can change this onChildAdded
+                // to prevent any extra added cost
+                unsubscribeRef.current = onValue(room, (snapshot) => {
                     if(snapshot.exists() === false) return;
                     const room:ChatRoom['public'] = snapshot.val();
                     setMessages(extractChat(room));
@@ -65,11 +70,14 @@ export default function useGame():UseGameResult {
             } catch(error) {
                 setConnected(false);
                 console.error(error);
+                connectionRef.current = false;
             }
         })();
         return ()=> {
-            if(room){
-                off(room);
+            if(unsubscribeRef.current){ 
+                unsubscribeRef.current();
+                unsubscribeRef.current = null;
+                connectionRef.current = false
             }
         }
     },[]);

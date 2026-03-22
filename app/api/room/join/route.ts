@@ -7,9 +7,8 @@ import { ChatRoom } from "@/types/server.types";
 
 
 // Create a single room in firebase db.
-async function createRoom():Promise<string> {
+async function createRoom(generatedUserID:string):Promise<string> {
      const roomRef = await database.ref('chat/rooms');
-    const generatedUserID = crypto.randomUUID();
 
     const chatRoomData:ChatRoom = {
         public: {
@@ -17,14 +16,15 @@ async function createRoom():Promise<string> {
             occupancy: 1,
             gameFinished: false,
             winner: '',
-            gameReady: false
+            gameReady: false,
+            currentTurn: ''
         },
         restricted: {
             isBotRoom: true,
             players: {
                 [generatedUserID]: {
-                    // more player infomration here
-                    joined: Date.now()
+                    // more player information here
+                    joined: new Date().toISOString()
                 }
             }
         }
@@ -53,26 +53,41 @@ async function listRooms(): Promise<Record<string, ChatRoom> | null> {
 // THis means that the room is available to share for a specific user now.
 async function establishConnection(roomId:string, userId:string):Promise<boolean> {
     try {
+        const MAX_CAPACITY = 2;
         const roomRef = await database.ref(`chat/rooms/${roomId}`)
 
         //If the item exists, run transaction 
-        const connected = await roomRef.transaction((roomInfo):ChatRoom | undefined | null=> {
+        const connected = await roomRef.transaction((roomInfo):(ChatRoom | undefined | null)=> {
             if(roomInfo === null)  return roomInfo
             // Cancel transaction if room is full.
-            if(!roomInfo || roomInfo.occupancy >= 2) return;
+            if(!roomInfo || roomInfo.occupancy >= MAX_CAPACITY) return;
+
+
+            //decide on who's going first? 
+            const parity = Math.floor(Math.random()* 2);
+            let firstTurnPlayer:string;
+            if(parity === 0) {
+                firstTurnPlayer = userId;
+                console.log('first players choice');
+            } else {
+                firstTurnPlayer = Object.keys(roomInfo.restricted.players)[0];
+                console.log("second players choice")
+            }
 
             return {
                 ...roomInfo,
                 public: {
                     ...roomInfo.public,
-                    occupancy: roomInfo.public.occupancy + 1
+                    occupancy: roomInfo.public.occupancy + 1,
+                    gameReady: true,
+                    playerTurn: firstTurnPlayer
                 },
                 restricted: {
                     ...roomInfo.restricted,
                     players: {
                         ...(roomInfo.restricted.players || {}),
                         [userId]: {
-                            joined: new Date(),
+                            joined: new Date().toISOString(),
                         }
                     }
                 }
@@ -123,15 +138,16 @@ export async function GET(_:NextRequest):Promise<NextResponse> {
     // Room is initialized now,
     try {
         const userId = crypto.randomUUID();
+        console.log('user id that should be added', userId);
         let roomId = await connectUserToRoom(userId);
 
         if(roomId === '')  {
             console.log("no rooms found, creating a new room...");
-            roomId = await createRoom();
+            roomId = await createRoom(userId);
         }
 
 
-        return NextResponse.json({data: {roomId: roomId, userId: crypto.randomUUID()}}, {status: 200});
+        return NextResponse.json({data: {roomId: roomId, userId}}, {status: 200});
     } catch(error) {
         console.error(error);
         return NextResponse.json({data:'Cannot find a room to join =('}, {status:500})

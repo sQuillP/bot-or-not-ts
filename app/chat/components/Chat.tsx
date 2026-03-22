@@ -1,7 +1,7 @@
 import { Bot, Power, Send, User } from "lucide-react";
 import ChatHeader from "./ChatHeader";
 import ChatBubble from "./ChatBubble";
-import { useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -30,8 +30,22 @@ export default function Chat() {
     }
 
 
+    useEffect(()=> {
+        if(!scrollRef.current) return;
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    },[messages]);
+
+
     function onDecideUser(isBot: boolean):void {
         
+    }
+
+
+    async function handleKeyEnter(event:KeyboardEvent<HTMLTextAreaElement>):Promise<void> {
+        if(event.key !== 'Enter' || !chatMessage.trim()) return;
+        console.log(event.key)
+        await sendMessage(chatMessage);
+        setChatMessage('');
     }
 
 
@@ -43,7 +57,7 @@ export default function Chat() {
                 <div className="space-y-4 p-3">
                     {
                         messages.map((message:RoomMessage) => {
-                            return <ChatBubble key={message.created} isMe={false} text={message.message}/>
+                            return <ChatBubble key={message.created} isMe={message.from === userId} text={message.message}/>
                         })
                     }
                 </div>
@@ -64,7 +78,7 @@ export default function Chat() {
                     </button>
                 </div>
                 <div className="flex flex-row p-3 border-box gap-2 bg-card-bg border-t-2">
-                    <textarea value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} placeholder="Type your message here..." className="focus:border-teal focus:outline-none w-full bg-card-bg text-black rounded outline-hidden text-white p-3 border-box resize-none border-2 transition mr-1" />
+                    <textarea onKeyDown={handleKeyEnter} value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} placeholder="Type your message here..." className="focus:border-teal focus:outline-none w-full bg-card-bg text-black rounded outline-hidden text-white p-3 border-box resize-none border-2 transition mr-1" />
                     <button onClick={()=> sendMessage(chatMessage)} className="rounded bg-teal w-19 h-19 m-auto cursor-pointer"><Send className="m-auto"/></button>
                 </div>
             </section>
