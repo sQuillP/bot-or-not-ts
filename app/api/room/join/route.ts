@@ -21,6 +21,7 @@ async function createRoom(generatedUserID:string):Promise<string> {
         },
         restricted: {
             isBotRoom: true,
+            lastMessageTimestamp: '',
             players: {
                 [generatedUserID]: {
                     // more player information here
@@ -74,6 +75,8 @@ async function establishConnection(roomId:string, userId:string):Promise<boolean
                 console.log("second players choice")
             }
 
+            console.log(firstTurnPlayer);
+
             return {
                 ...roomInfo,
                 public: {
@@ -84,6 +87,7 @@ async function establishConnection(roomId:string, userId:string):Promise<boolean
                 },
                 restricted: {
                     ...roomInfo.restricted,
+                    lastMessageTimestamp: new Date().toISOString(),
                     players: {
                         ...(roomInfo.restricted.players || {}),
                         [userId]: {

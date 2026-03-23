@@ -1,20 +1,31 @@
 import firebase from '@/lib/firebaseAdmin';
 
+const MAX_TIME_DELAY_MS = Infinity;//10_000 + 800//30_000;
 
-// Make sure that non-members cannot send messages
-// Make sure that whoever's turn it is to make sure only they can go next.
-// make sure that they're not sending too much data through the server...
-// we can also enforce this on the frontend as well. Maybe 500 characters at most
+
+// Makes sure that user belongs to room.
+// makes sure that it is currently users turn.
+// checks timestamp from last message.
 export async function guardRoom(roomId:string, userId: string):Promise<boolean> {
     try {
-        // const room = await firebase.ref(`/chat/rooms/${roomId}/restricted/players/${userId}`);
-        // const roomDetails = await room.once('value');
-        // return roomDetails.exists();
-        const [membership, currentPlayer] = await Promise.all([
+        const now = Date.now();
+        const [membership, currentPlayer, lastMessageTimestamp] = await Promise.all([
             firebase.ref(`/chat/rooms/${roomId}/restricted/players/${userId}`).once('value'),
-            firebase.ref(`/chat/rooms/${roomId}/public/playerTurn`).once('value')
+            firebase.ref(`/chat/rooms/${roomId}/public/playerTurn`).once('value'),
+            firebase.ref(`/chat/rooms/${roomId}/restricted/lastMessageTimestamp`).once('value')
         ]);
-        console.log(membership.val(), currentPlayer.val())
+        const lastTimestamp = new Date(lastMessageTimestamp.val()).getTime();
+
+        //Verify time has not passed already. Otherwise, lock the room down.
+        if(now - lastTimestamp > MAX_TIME_DELAY_MS) {
+            console.log('time ran out. This endpoint is locked forever.',now - lastTimestamp);
+            return false;
+        }
+
+        // Verify the membership of player, and make sure it's their turn.
+        // Otherwise, deny write access to the room.
+        // User may be able to read from the room for now, that poses
+        // no security threat to intruders necessarily.
         return membership.exists() && currentPlayer.val() === userId;
     } catch(error) {
         console.error('Error verifying membership: ',error);

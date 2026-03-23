@@ -7,6 +7,8 @@ export interface RoomMessage {
     message: string;
 }
 
+export type Guess = 'Bot' | 'Human';
+
 export interface PlayerData {
     joined: string;
 }
@@ -24,6 +26,7 @@ export interface ChatRoom {
     },
     restricted: {
         isBotRoom: boolean;
+        lastMessageTimestamp: string;
         players: {
             [playerId:string]: PlayerData;
         }

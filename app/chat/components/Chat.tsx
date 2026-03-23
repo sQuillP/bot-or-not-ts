@@ -13,14 +13,14 @@ import {
 } from "@/components/ui/dialog";
 import {useRouter} from "next/navigation";
 import useGame from "@/hooks/useGame";
-import { RoomMessage } from "@/types/server.types";
+import { Guess, RoomMessage } from "@/types/server.types";
+import { guessIdentity } from "@/lib/axios";
 
 export default function Chat() {
 
     const [openDisconnectModal, setOpenDisconnectModal] = useState<boolean>(false);
     const [chatMessage, setChatMessage] = useState<string>('');
     const {messages, roomId, userId, sendMessage } = useGame();
-
     const scrollRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
@@ -29,16 +29,10 @@ export default function Chat() {
         router.push('/');
     }
 
-
     useEffect(()=> {
         if(!scrollRef.current) return;
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     },[messages]);
-
-
-    function onDecideUser(isBot: boolean):void {
-        
-    }
 
 
     async function handleKeyEnter(event:KeyboardEvent<HTMLTextAreaElement>):Promise<void> {
@@ -48,6 +42,22 @@ export default function Chat() {
         setChatMessage('');
     }
 
+
+    async function handleSendClick():Promise<void> {
+        await sendMessage(chatMessage);
+        setChatMessage('');
+    }
+
+    async function onConfirmGuess(guess: Guess):Promise<void> {
+        try {
+            
+            const result = await guessIdentity(roomId,userId,guess);
+            console.log(result);
+        } catch(error) {
+            console.log("unable to reach server...");
+
+        }
+    }
 
 
     return (
@@ -64,13 +74,13 @@ export default function Chat() {
             </section>
             <section className="">
                 <div className="flex justify-between bg-card-bg p-4 border-box border-2 border-b-0">
-                    <button className="border-2 border-teal hover:bg-teal hover:text-white transition cursor-pointer p-2 rounded w-full mr-1 text-teal outline-none">
+                    <button onClick={()=> onConfirmGuess('Bot')} className="border-2 border-teal hover:bg-teal hover:text-white transition cursor-pointer p-2 rounded w-full mr-1 text-teal outline-none">
                         <div className="flex items-center justify-center gap-2 rounded">
                             <Bot size={20}/>
                             It&apos;s a Bot
                         </div>
                     </button>
-                    <button className="border-2 border-purple hover:bg-purple hover:text-white transition cursor-pointer p-2 rounded w-full text-purple outline-none text-center">
+                    <button onClick={()=> onConfirmGuess('Human')} className="border-2 border-purple hover:bg-purple hover:text-white transition cursor-pointer p-2 rounded w-full text-purple outline-none text-center">
                         <div className="flex items-center justify-center gap-2 rounded">
                             <User size={20}/>
                             Not a Bot
@@ -79,7 +89,7 @@ export default function Chat() {
                 </div>
                 <div className="flex flex-row p-3 border-box gap-2 bg-card-bg border-t-2">
                     <textarea onKeyDown={handleKeyEnter} value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} placeholder="Type your message here..." className="focus:border-teal focus:outline-none w-full bg-card-bg text-black rounded outline-hidden text-white p-3 border-box resize-none border-2 transition mr-1" />
-                    <button onClick={()=> sendMessage(chatMessage)} className="rounded bg-teal w-19 h-19 m-auto cursor-pointer"><Send className="m-auto"/></button>
+                    <button onClick={handleSendClick} className="rounded bg-teal w-19 h-19 m-auto cursor-pointer"><Send className="m-auto"/></button>
                 </div>
             </section>
             <Dialog open={openDisconnectModal} onOpenChange={setOpenDisconnectModal}>

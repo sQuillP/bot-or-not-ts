@@ -17,20 +17,25 @@ export async function POST(
     try {
         const body:RoomMessage = await request.json();
         const {roomId} = await params;
-        const validRequest = true;//await guardRoom(roomId,body.from);
-        console.log("is this guy really a member? ", validRequest);
+        const validRequest = await guardRoom(roomId,body.from);
 
-        // if(validRequest === false) {
-        //     return NextResponse.json({data: "Don't be ruining other people's fun...."}, {status: 403});
-        // }
-        
+        if(validRequest === false) {
+            return NextResponse.json({data: "Don't be ruining other people's fun...."}, {status: 403});
+        }
+        //Add the message, process the last timestamp, find list of players...
+        const [_, __, players] = await Promise.all([
+            firebase.ref(`/chat/rooms/${roomId}/public/messages`).push(body),
+            firebase.ref(`/chat/rooms/${roomId}/restricted/lastMessageTimestamp`).set(new Date().toISOString()),
+            firebase.ref(`/chat/rooms/${roomId}/restricted/players`).once('value')
+        ]);
 
-        const dbRef = firebase.ref(`/chat/rooms/${roomId}/public/messages`);
-        await dbRef.push(body);
 
-        return NextResponse.json({data:'ok'}, {status:200});
+        const otherplayer = Object.keys(players.val()).filter(userId => userId !== body.from)[0];
+        await firebase.ref(`/chat/rooms/${roomId}/public/playerTurn`).set(otherplayer);
+
+        return NextResponse.json({data:'message received. awaiting other players turn.'}, {status:200});
     } catch(error) {
         console.error(error);
-        return NextResponse.json({data: 'Server broke'}, {status: 500});
+        return NextResponse.json({data: 'Server broke =('}, {status: 500});
     }
 }

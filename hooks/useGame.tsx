@@ -1,5 +1,5 @@
 import { connectToRoom } from "@/lib/axios";
-import { DatabaseReference, off, onValue, ref, Unsubscribe } from "firebase/database";
+import { onValue, ref, Unsubscribe } from "firebase/database";
 import { useEffect, useRef, useState } from "react";
 import chatClient from "@/lib/firebase";
 import { ChatRoom, RoomMessage } from "@/types/server.types";
