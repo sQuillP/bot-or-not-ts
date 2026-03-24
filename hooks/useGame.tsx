@@ -2,7 +2,7 @@ import { connectToRoom } from "@/lib/axios";
 import { onValue, ref, Unsubscribe } from "firebase/database";
 import { useEffect, useRef, useState } from "react";
 import chatClient from "@/lib/firebase";
-import { ChatRoom, RoomMessage } from "@/types/server.types";
+import { ChatRoom, END_STATES, RoomMessage } from "@/types/server.types";
 import axios from "axios";
 
 interface UseGameResult {
@@ -11,6 +11,8 @@ interface UseGameResult {
     userId: string;
     sendMessage: (message:string)=> Promise<void>;
     connected:boolean;
+    winner: boolean | undefined;
+    playerGuess: END_STATES | undefined;
     // anything else goes in here.
 }
 
@@ -27,6 +29,9 @@ export default function useGame():UseGameResult {
     const [connected, setConnected] = useState<boolean>(false);
     const connectionRef = useRef<boolean>(false);
     const unsubscribeRef= useRef<Unsubscribe | null>(null);
+    // find the winner throughout the app.
+    const [playerGuess, setPlayerGuess] = useState<END_STATES | undefined>();
+    const [winner, setWinner] = useState<boolean | undefined>(false);
 
 
     async function sendMessage(textMessage: string):Promise<void> {
@@ -62,9 +67,12 @@ export default function useGame():UseGameResult {
                 unsubscribeRef.current = onValue(room, (snapshot) => {
                     if(snapshot.exists() === false) return;
                     const room:ChatRoom['public'] = snapshot.val();
+                    // extract the chat state from the room
                     setMessages(extractChat(room));
                     setRoomId(roomId);
                     setUserId(userId);
+                    setWinner(!room.winner ? undefined : room.winner === userId);
+                    setPlayerGuess(!room.playerGuess ? undefined : room.playerGuess);
                     setConnected(true)
                 }, console.error);
             } catch(error) {
@@ -87,6 +95,8 @@ export default function useGame():UseGameResult {
         roomId,
         userId,
         connected,
-        sendMessage
+        sendMessage,
+        winner,
+        playerGuess
     }
 }

@@ -1,5 +1,12 @@
 
 
+export enum END_STATES  {
+    PLAYER_GUESS_PLAYER,
+    PLAYER_GUESS_BOT,
+    PLAYER_TIMEOUT,
+}
+
+
 // Message contract for a room.
 export interface RoomMessage {
     created: number; // timestamp
@@ -23,6 +30,7 @@ export interface ChatRoom {
         winner?: string;
         gameReady: boolean;
         currentTurn: string;
+        playerGuess?: END_STATES;
     },
     restricted: {
         isBotRoom: boolean;

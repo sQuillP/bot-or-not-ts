@@ -1,7 +1,7 @@
 import { Bot, Power, Send, User } from "lucide-react";
 import ChatHeader from "./ChatHeader";
 import ChatBubble from "./ChatBubble";
-import { KeyboardEvent, useEffect, useRef, useState } from "react";
+import { JSX, KeyboardEvent, useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -13,16 +13,38 @@ import {
 } from "@/components/ui/dialog";
 import {useRouter} from "next/navigation";
 import useGame from "@/hooks/useGame";
-import { Guess, RoomMessage } from "@/types/server.types";
+import { END_STATES, Guess, RoomMessage } from "@/types/server.types";
 import { guessIdentity } from "@/lib/axios";
 
-export default function Chat() {
+interface ChatProps {
+    setVerdict: (state:END_STATES) => void;
+    setIsWinner: (isWinner:boolean) => void;
+}
+
+
+export default function Chat({setVerdict, setIsWinner}:ChatProps):JSX.Element {
 
     const [openDisconnectModal, setOpenDisconnectModal] = useState<boolean>(false);
     const [chatMessage, setChatMessage] = useState<string>('');
-    const {messages, roomId, userId, sendMessage } = useGame();
+    const {
+        messages, 
+        roomId, 
+        userId, 
+        sendMessage,
+        playerGuess,
+        winner
+     } = useGame();
     const scrollRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+
+
+    useEffect(()=> {
+        if(!playerGuess || !winner) return;
+        setVerdict(playerGuess);
+        setIsWinner(winner);
+
+        console.log("calling....")
+    },[playerGuess,winner, setIsWinner, setVerdict]);
 
     function onLeaveGame():void {
         // make api call to leave game, then redirect to home page or something.
