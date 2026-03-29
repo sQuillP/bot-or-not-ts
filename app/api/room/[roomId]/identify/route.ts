@@ -1,42 +1,98 @@
 import { NextRequest, NextResponse } from "next/server";
 import firebase from '@/lib/firebaseAdmin';
-
-// limit to how many messages they can do until they can guess the other person....
-// make sure the person belongs to a room.
-// validat the body would be nice, but not necessary for now.
-export async function guardRoom(roomId:string):Promise<boolean> {
+import { GuessIdentityRequest } from "@/types/request.types";
+import { ChatRoom, END_STATES } from "@/types/server.types";
 
 
+const MIN_MESSAGES_BEFORE_GUESS = -1;
+
+
+/**
+ * @description - Makes sure that user is a member, and that the game is not already finished. Also checks to see if there are enough messages to make a guess.
+ * If all of these conditions are satisfied, then the user can make a guess and update the game state accordingly.
+ * @param roomId 
+ * @param body 
+ * @returns 
+ */
+export async function guardRoom(roomId:string, body:GuessIdentityRequest):Promise<boolean> {
+    const [membership, gameFinished] = await Promise.all([
+        firebase.ref(`/chat/rooms/${roomId}/restricted/players/${body.userId}`).once('value'),
+        firebase.ref(`/chat/rooms/${roomId}/public/gameFinished`).once('value'),
+    ]);
+
+    if(membership.exists() === false) {
+        console.log("user is not a member of this room. Cannot make guess.");
+        return false;
+    }
+    if(gameFinished.val() === true) {
+        console.log("game is already finished. Nothing more can be done in this room.")
+        return false;
+    }
+
+    const messageReads = await firebase.ref(`/chat/rooms/${roomId}/public/messages`).once('value');
+    const messageList:number = Object.keys(messageReads.val() || {}).length;
+
+    if(messageList <= MIN_MESSAGES_BEFORE_GUESS) {
+        console.log('Not enough messages to make a guess. Messages so far: ', messageList);
+        return false;
+    }
 
     return true;
 }
 
+
 /**
- * 
- * 
- * user is going to make a guess on whether or not the other person is a bot or not.
+ * @description - 
+ * @param request 
+ * @param param1 
+ * @returns 
  */
 export async function POST(
     request:NextRequest,
     {params}:{params: Promise<{roomId:string}>}
 ):Promise<NextResponse> {
+    try {
 
-    const body = await request.json();
-    const {roomId} = await params;
+        const body:GuessIdentityRequest = await request.json();
+        const {roomId} = await params;
 
-    // const validRequest = await guardRoom(roomId)
-    // Update the game and make sure that user can do something like update
-    // set the guess and the winner
-    // lock the room
-    // that should be it.
-    // you should later be recording player stats with SQL
-    // once the game is over, the player stats will be sent and processed
-    // user will either gain or lose rank from a specified game.
-    const database = await firebase.ref(`/chat/rooms/${roomId}/restricted/players`);
-
-    
+        const validRequest = await guardRoom(roomId, body);
+        if(validRequest === false) {
+            return NextResponse.json({data: 'Insufficient conditions for guessing in this room.'}, {status: 400});
+        }
 
 
+        // grab room resources to determine if guess is correct, then update the game state accordingly.
+        const isBotRoom = await firebase.ref(`/chat/rooms/${roomId}/restricted/isBotRoom`).once('value');
+        const playerIds = Object.keys((await firebase.ref(`/chat/rooms/${roomId}/restricted/players`).once('value')).val());
+        const otherPlayer = playerIds.filter(id => id !== body.userId)[0];
 
-    return NextResponse.json({data: 'ok'}, {status: 200});
+        // assume winner is the guesser, and then flip if the guess is wrong.
+        let winnerId:string = body.userId;
+        let loserId:string = otherPlayer;
+        let endState:END_STATES;
+        if(isBotRoom.val() !== true && body.guess === 'Bot') {
+            // user guessed bot, but it was a human room. User loses.
+            winnerId = otherPlayer;
+            loserId = body.userId;
+        }
+
+        if(body.guess === 'Human' && isBotRoom.val() === true) {
+            endState = END_STATES.PLAYER_GUESS_BOT
+        } else {
+            endState = END_STATES.PLAYER_GUESS_PLAYER;
+        }
+
+        const guess = firebase.ref(`/chat/rooms/${roomId}/public/playerGuess`).set(endState);
+        const lock = firebase.ref(`/chat/rooms/${roomId}/public/gameFinished`).set(true);
+        const winner = firebase.ref(`/chat/rooms/${roomId}/public/winner`).set(winnerId);
+        const guesser = firebase.ref(`/chat/rooms/${roomId}/public/guesserId`).set(body.userId);
+
+        await Promise.all([guess, lock, winner, guesser]);
+
+        return NextResponse.json({data: 'ok'}, {status: 200});
+    } catch(error) {
+        console.error('error guessing player identity: ',error);
+        return NextResponse.json({data: 'Unable to process guess at this time.'}, {status: 500});
+    }
 }

@@ -67,6 +67,7 @@ export default function useGame():UseGameResult {
                 unsubscribeRef.current = onValue(room, (snapshot) => {
                     if(snapshot.exists() === false) return;
                     const room:ChatRoom['public'] = snapshot.val();
+                    console.log("room event received", room);
                     // extract the chat state from the room
                     setMessages(extractChat(room));
                     setRoomId(roomId);

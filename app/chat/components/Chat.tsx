@@ -39,10 +39,12 @@ export default function Chat({setVerdict, setIsWinner}:ChatProps):JSX.Element {
 
 
     useEffect(()=> {
-        if(!playerGuess || !winner) return;
+        console.log("checking for player guess and winner", playerGuess, winner);
+        if(playerGuess === undefined || winner === undefined) return;
         setVerdict(playerGuess);
         setIsWinner(winner);
 
+        console.log(playerGuess, winner);
         console.log("calling....")
     },[playerGuess,winner, setIsWinner, setVerdict]);
 

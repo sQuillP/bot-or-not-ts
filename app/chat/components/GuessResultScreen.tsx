@@ -20,6 +20,8 @@ export default function GuessResultScreen({ winner = true, reason = END_STATES.P
             <section className="text-center max-w-md w-full">
                 {(() => {
                     // Shared styles for icons and text
+
+                    console.log({winner, reason});
                     const iconClasses = "m-auto mb-6";
                     const iconSize = 60;
                     const textClasses = "text-gray-400 text-2xl mb-8 leading-relaxed";
@@ -28,7 +30,7 @@ export default function GuessResultScreen({ winner = true, reason = END_STATES.P
                         return (
                             <>
                                 <CircleCheckBig size={iconSize} className={`${iconClasses} text-green-400`} />
-                                <p className={textClasses}>The other player incorrectly guessed your identity...</p>
+                                <p className={textClasses}>You have correctly identified the other player as a bot.</p>
                             </>
                         );
                     } 

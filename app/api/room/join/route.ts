@@ -20,7 +20,7 @@ async function createRoom(generatedUserID:string):Promise<string> {
             currentTurn: ''
         },
         restricted: {
-            isBotRoom: true,
+            isBotRoom: false,
             lastMessageTimestamp: '',
             players: {
                 [generatedUserID]: {
@@ -60,8 +60,8 @@ async function establishConnection(roomId:string, userId:string):Promise<boolean
         //If the item exists, run transaction 
         const connected = await roomRef.transaction((roomInfo):(ChatRoom | undefined | null)=> {
             if(roomInfo === null)  return roomInfo
-            // Cancel transaction if room is full.
-            if(!roomInfo || roomInfo.occupancy >= MAX_CAPACITY) return;
+            // Cancel transaction if room is full or the game is already finished.
+            if(!roomInfo || roomInfo.occupancy >= MAX_CAPACITY || roomInfo.public?.gameFinished) return;
 
 
             //decide on who's going first? 
@@ -75,7 +75,6 @@ async function establishConnection(roomId:string, userId:string):Promise<boolean
                 console.log("second players choice")
             }
 
-            console.log(firstTurnPlayer);
 
             return {
                 ...roomInfo,

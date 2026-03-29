@@ -1,9 +1,9 @@
 
 
 export enum END_STATES  {
-    PLAYER_GUESS_PLAYER,
-    PLAYER_GUESS_BOT,
-    PLAYER_TIMEOUT,
+    PLAYER_GUESS_PLAYER = 'PLAYER_GUESS_PLAYER',
+    PLAYER_GUESS_BOT = 'PLAYER_GUESS_BOT',
+    PLAYER_TIMEOUT = 'PLAYER_TIMEOUT',
 }
 
 
@@ -31,6 +31,7 @@ export interface ChatRoom {
         gameReady: boolean;
         currentTurn: string;
         playerGuess?: END_STATES;
+        guesserId?:string;
     },
     restricted: {
         isBotRoom: boolean;
