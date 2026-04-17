@@ -1,3 +1,4 @@
+import SignIn from '@/components/SignIn';
 import { Zap, Bot, User, Trophy } from "lucide-react";
 import Link from "next/link";
 
@@ -47,6 +48,7 @@ export default function Home() {
               <Trophy className="inline-block mr-2" size={15} />
               View Leaderboard
           </Link>
+          <SignIn />
         </div>
       </section>
    </main>

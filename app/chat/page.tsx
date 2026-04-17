@@ -1,32 +1,34 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Loading } from "./components/Loading";
+import { useState } from "react";
 import Chat from "./components/Chat";
-import useGame from "@/hooks/useGame";
 import GuessResultScreen from "./components/GuessResultScreen";
 import { END_STATES } from "@/types/server.types";
 
-const states = ["connecting", "finding_game", "game_found"] as const;
-
+export interface ChatPageState {
+    winner: boolean | undefined;
+    reason: END_STATES | undefined;
+    guesserId: string | undefined;
+    userId:string | undefined;
+}
 
 export default function ChatPage() {
 
-
-    const [verdict, setVerdict] = useState<END_STATES | undefined>();
-    const [isWinner, setIsWinner] = useState<boolean | undefined>();
-
-
+    const [gameResultData, setGameResultData] = useState<ChatPageState>({
+        winner: undefined, 
+        reason: undefined,
+        guesserId: undefined,
+        userId: undefined
+    });
     
    
     return (
         <main className="h-screen  bg-bg-primary">
             {
-                (verdict && isWinner !== undefined) ? (
-                    <GuessResultScreen winner={isWinner} reason={verdict}/>
+                (gameResultData.reason && gameResultData.winner !== undefined && gameResultData.userId !== undefined) ? (
+                    <GuessResultScreen userId={gameResultData.userId} guesserId={gameResultData.guesserId} winner={gameResultData.winner} reason={gameResultData.reason}/>
                 ): (
                     <Chat 
-                        setVerdict={(v) => setVerdict(v)}
-                        setIsWinner={(w) => setIsWinner(w)}
+                        setGameResultData={setGameResultData}
                     />
                 )
             }

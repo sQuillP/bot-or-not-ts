@@ -54,6 +54,7 @@ async function listRooms(): Promise<Record<string, ChatRoom> | null> {
 // THis means that the room is available to share for a specific user now.
 async function establishConnection(roomId:string, userId:string):Promise<boolean> {
     try {
+        console.log('google id', process.env.AUTH_GOOGLE_ID, 'secret', process.env.AUTH_GOOGLE_SECRET)
         const MAX_CAPACITY = 2;
         const roomRef = await database.ref(`chat/rooms/${roomId}`)
 

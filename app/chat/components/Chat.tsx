@@ -13,16 +13,16 @@ import {
 } from "@/components/ui/dialog";
 import {useRouter} from "next/navigation";
 import useGame from "@/hooks/useGame";
-import { END_STATES, Guess, RoomMessage } from "@/types/server.types";
+import { Guess, RoomMessage } from "@/types/server.types";
 import { guessIdentity } from "@/lib/axios";
+import { ChatPageState } from "../page";
 
 interface ChatProps {
-    setVerdict: (state:END_STATES) => void;
-    setIsWinner: (isWinner:boolean) => void;
+    setGameResultData: (data:ChatPageState) => void;
 }
 
 
-export default function Chat({setVerdict, setIsWinner}:ChatProps):JSX.Element {
+export default function Chat({setGameResultData}:ChatProps):JSX.Element {
 
     const [openDisconnectModal, setOpenDisconnectModal] = useState<boolean>(false);
     const [chatMessage, setChatMessage] = useState<string>('');
@@ -32,7 +32,8 @@ export default function Chat({setVerdict, setIsWinner}:ChatProps):JSX.Element {
         userId, 
         sendMessage,
         playerGuess,
-        winner
+        winner,
+        guesserId
      } = useGame();
     const scrollRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -40,13 +41,10 @@ export default function Chat({setVerdict, setIsWinner}:ChatProps):JSX.Element {
 
     useEffect(()=> {
         console.log("checking for player guess and winner", playerGuess, winner);
-        if(playerGuess === undefined || winner === undefined) return;
-        setVerdict(playerGuess);
-        setIsWinner(winner);
+        if(playerGuess === undefined || winner === undefined || guesserId === undefined) return;
+        setGameResultData({winner, reason:playerGuess, guesserId, userId});
 
-        console.log(playerGuess, winner);
-        console.log("calling....")
-    },[playerGuess,winner, setIsWinner, setVerdict]);
+    },[playerGuess,winner, setGameResultData, guesserId]);
 
     function onLeaveGame():void {
         // make api call to leave game, then redirect to home page or something.
@@ -61,7 +59,6 @@ export default function Chat({setVerdict, setIsWinner}:ChatProps):JSX.Element {
 
     async function handleKeyEnter(event:KeyboardEvent<HTMLTextAreaElement>):Promise<void> {
         if(event.key !== 'Enter' || !chatMessage.trim()) return;
-        console.log(event.key)
         await sendMessage(chatMessage);
         setChatMessage('');
     }

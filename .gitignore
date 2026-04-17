@@ -16,7 +16,8 @@
 
 certs/
 
-
+dist/
+zipped/
 
 # next.js
 /.next/

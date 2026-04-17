@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import firebase from '@/lib/firebaseAdmin';
 import { GuessIdentityRequest } from "@/types/request.types";
-import { ChatRoom, END_STATES } from "@/types/server.types";
+import { END_STATES } from "@/types/server.types";
 
 
 const MIN_MESSAGES_BEFORE_GUESS = -1;
@@ -77,10 +77,12 @@ export async function POST(
             loserId = body.userId;
         }
 
-        if(body.guess === 'Human' && isBotRoom.val() === true) {
-            endState = END_STATES.PLAYER_GUESS_BOT
+
+        //TODO: just have player send end state and forget this thing.
+        if(body.guess === 'Human') {
+            endState = END_STATES.PLAYER_GUESS_PLAYER
         } else {
-            endState = END_STATES.PLAYER_GUESS_PLAYER;
+            endState = END_STATES.PLAYER_GUESS_BOT;
         }
 
         const guess = firebase.ref(`/chat/rooms/${roomId}/public/playerGuess`).set(endState);

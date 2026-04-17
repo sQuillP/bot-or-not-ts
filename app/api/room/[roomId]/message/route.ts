@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { RoomMessage } from "@/types/server.types";
 import firebase from '@/lib/firebaseAdmin';
 import { guardRoom } from "./guards";
+import { queueBot } from "@/lib/sqs";
 
 interface MessageRouteParams {
     roomId:string;
@@ -32,6 +33,11 @@ export async function POST(
 
         const otherplayer = Object.keys(players.val()).filter(userId => userId !== body.from)[0];
         await firebase.ref(`/chat/rooms/${roomId}/public/playerTurn`).set(otherplayer);
+
+        console.log("queuing bot with this message::: ", body.message, "from user: ", body.from, "in room: ", roomId);
+        const queued = await queueBot(roomId);
+
+        console.log('queued bot successfully::: ', queued);
 
         return NextResponse.json({data:'message received. awaiting other players turn.'}, {status:200});
     } catch(error) {

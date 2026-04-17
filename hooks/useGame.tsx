@@ -5,7 +5,7 @@ import chatClient from "@/lib/firebase";
 import { ChatRoom, END_STATES, RoomMessage } from "@/types/server.types";
 import axios from "axios";
 
-interface UseGameResult {
+export interface UseGameResult {
     messages: RoomMessage[];
     roomId:string;
     userId: string;
@@ -13,6 +13,7 @@ interface UseGameResult {
     connected:boolean;
     winner: boolean | undefined;
     playerGuess: END_STATES | undefined;
+    guesserId: string | undefined;
     // anything else goes in here.
 }
 
@@ -32,7 +33,7 @@ export default function useGame():UseGameResult {
     // find the winner throughout the app.
     const [playerGuess, setPlayerGuess] = useState<END_STATES | undefined>();
     const [winner, setWinner] = useState<boolean | undefined>(false);
-
+    const [guesserId, setGuesserId] = useState<string | undefined>(undefined);
 
     async function sendMessage(textMessage: string):Promise<void> {
         try {
@@ -74,6 +75,7 @@ export default function useGame():UseGameResult {
                     setUserId(userId);
                     setWinner(!room.winner ? undefined : room.winner === userId);
                     setPlayerGuess(!room.playerGuess ? undefined : room.playerGuess);
+                    setGuesserId(!room.guesserId ? undefined : room.guesserId);
                     setConnected(true)
                 }, console.error);
             } catch(error) {
@@ -98,6 +100,7 @@ export default function useGame():UseGameResult {
         connected,
         sendMessage,
         winner,
-        playerGuess
+        playerGuess,
+        guesserId
     }
 }

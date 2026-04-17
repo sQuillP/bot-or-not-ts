@@ -1,4 +1,4 @@
-import serviceAccount from '../app/certs/bot-or-not-688c2-firebase-adminsdk-fbsvc-f853924134.json'
+import serviceAccount from '../app/certs/bot-or-not-493301-firebase-adminsdk-fbsvc-cbaf6fee62.json'
 import { getDatabase } from 'firebase-admin/database';
 import { initializeApp, cert, getApps, getApp, ServiceAccount } from 'firebase-admin/app';
 

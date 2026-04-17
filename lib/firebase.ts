@@ -1,18 +1,18 @@
 // Import the functions you need from the SDKs you need
-import { FirebaseApp, FirebaseOptions, initializeApp } from "firebase/app";
+import { FirebaseApp, initializeApp } from "firebase/app";
 import { Database, getDatabase } from "firebase/database";
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig:FirebaseOptions = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: "bot-or-not-688c2.firebaseapp.com",
-  projectId: "bot-or-not-688c2",
-  storageBucket: "bot-or-not-688c2.firebasestorage.app",
-  messagingSenderId:process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-  measurementId: process.env.FIREBASE_MEASUREMENT_ID
+const firebaseConfig = {
+  apiKey: "AIzaSyAz89h_lacO0R1ZbHv3axZ-v0NsQJIfCKY",
+  authDomain: "bot-or-not-493301.firebaseapp.com",
+  projectId: "bot-or-not-493301",
+  storageBucket: "bot-or-not-493301.firebasestorage.app",
+  messagingSenderId: "226385038659",
+  appId: "1:226385038659:web:60c24f149c01aa958ff3f6",
+  measurementId: "G-0H4ZVK15T1"
 };
 
 // Initialize Firebase
