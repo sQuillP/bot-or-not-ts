@@ -4,6 +4,7 @@ import { initializeApp, cert, getApps, getApp } from 'firebase-admin/app';
 import OpenAI from "openai";
 import fs from 'fs';
 import { SQSEvent, Context, SQSRecord} from 'aws-lambda';
+import { RoomMessage } from '@/types/server.types';
 
 
 interface SQSMessageBody {
@@ -53,13 +54,20 @@ function getDB() {
 }
 
 
+function chatDataToList(messages:{[messageId:string]:RoomMessage}):RoomMessage[] {
+  return Object.values(messages);
+}
+
+
 async function sendMessageToRoom(record:SQSRecord):Promise<void> {
 
   const body:SQSMessageBody = JSON.parse(record.body);
   const {roomId} = body
   const messageList = await db.ref(`/chat/rooms/${roomId}/public/messages`).once('value');
   console.log("Whats the message list", JSON.stringify(messageList));
-
+  // lets turn 
+  const extractedMessages = Object.values(messageList.val() || {});
+  console.log(extractedMessages);
 
 }
 
