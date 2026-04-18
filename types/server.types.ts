@@ -29,16 +29,17 @@ export interface ChatRoom {
         gameFinished: boolean;
         winner?: string;
         gameReady: boolean;
-        currentTurn: string;
         playerGuess?: END_STATES;
         guesserId?:string;
+        playerTurn?: string;
     },
     restricted: {
         isBotRoom: boolean;
         lastMessageTimestamp: string;
         players: {
             [playerId:string]: PlayerData;
-        }
+        },
+        botId?:string;
     }
 }
 

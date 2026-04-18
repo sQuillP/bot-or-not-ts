@@ -7,8 +7,20 @@ import { ChatRoom } from "@/types/server.types";
 
 
 // Create a single room in firebase db.
-async function createRoom(generatedUserID:string):Promise<string> {
-     const roomRef = await database.ref('chat/rooms');
+async function createRoom(generatedUserID:string, isBotRoom:boolean = false):Promise<string> {
+    
+    const roomRef = await database.ref('chat/rooms');
+
+     //define some bot properties, which default to no value
+     let botId: string = '';
+     let botMetadata = {};
+
+
+     // Fill in those properties if this is a bot room.
+     if(isBotRoom) {
+        botId = crypto.randomUUID().toString();
+        botMetadata = { [botId]: { joined: new Date().toISOString() }};
+     }
 
     const chatRoomData:ChatRoom = {
         public: {
@@ -17,17 +29,18 @@ async function createRoom(generatedUserID:string):Promise<string> {
             gameFinished: false,
             winner: '',
             gameReady: false,
-            currentTurn: ''
         },
         restricted: {
-            isBotRoom: false,
+            isBotRoom,
             lastMessageTimestamp: '',
             players: {
                 [generatedUserID]: {
                     // more player information here
                     joined: new Date().toISOString()
-                }
-            }
+                },
+                ...botMetadata
+            },
+            botId: ''
         }
     };
 
@@ -143,12 +156,22 @@ export async function GET(_:NextRequest):Promise<NextResponse> {
     try {
         const userId = crypto.randomUUID();
         console.log('user id that should be added', userId);
-        let roomId = await connectUserToRoom(userId);
 
-        if(roomId === '')  {
-            console.log("no rooms found, creating a new room...");
-            roomId = await createRoom(userId);
-        }
+
+        // TEST out bot functionality....
+        const roomId = await createRoom(userId, false);
+
+        // let roomId = await connectUserToRoom(userId);
+
+        // if(roomId === '')  {
+        //     console.log("no rooms found, creating a new room...");
+        //     // 50/50 chance to create a bot room or not.
+        // // if there is no bot, then polling will then take place until someone either joins
+        // // that room or a bot gets filled in.
+            
+        //     const isBotRoom = Math.floor(Math.random()* 2) === 1;
+        //     roomId = await createRoom(userId, isBotRoom);
+        // }
 
 
         return NextResponse.json({data: {roomId: roomId, userId}}, {status: 200});

@@ -29,3 +29,15 @@ export async function guessIdentity(roomId:string, userId:string, guess:Guess):P
         console.log('unable to guess identity of user...');
     }
 }
+
+
+export async function poll(roomId:string):Promise<Record<string, string>> {
+    try {
+        const response = await axios.get(`/api/room/${roomId}/poll`);
+        console.log('polled for new state successfully. Response: ', response.data);
+        return response.data.data;
+    } catch(error) {
+        console.error('unable to poll for new game state', error);
+        return {};
+    }  
+}

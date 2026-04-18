@@ -44,7 +44,7 @@ export default function Chat({setGameResultData}:ChatProps):JSX.Element {
         if(playerGuess === undefined || winner === undefined || guesserId === undefined) return;
         setGameResultData({winner, reason:playerGuess, guesserId, userId});
 
-    },[playerGuess,winner, setGameResultData, guesserId]);
+    },[playerGuess,winner, setGameResultData, guesserId, userId]);
 
     function onLeaveGame():void {
         // make api call to leave game, then redirect to home page or something.
@@ -71,12 +71,10 @@ export default function Chat({setGameResultData}:ChatProps):JSX.Element {
 
     async function onConfirmGuess(guess: Guess):Promise<void> {
         try {
-            
             const result = await guessIdentity(roomId,userId,guess);
             console.log(result);
         } catch(error) {
             console.log("unable to reach server...");
-
         }
     }
 

@@ -7,6 +7,12 @@ import { SQSEvent, Context, SQSRecord} from 'aws-lambda';
 import { RoomMessage } from '@/types/server.types';
 
 
+
+function sleep(ms:number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 interface SQSMessageBody {
   roomId:string;
 }
@@ -20,23 +26,23 @@ const db = getDB();
 
 // Please iterate and improve upon this prompt.....
 const PROMPT = `
-You are a bot that is trying to convince a user that a real human is speaking to them. Your response 
-is sent and recorded via direct message. Please feel free to use improper grammar, incorrect spelling in order to fool the person on the other
-side of the conversation.
+  Persona: Casual mobile user; 
+  Rules: lowercase only, no periods, use 'u/rn/idk', 
+  occasional typos, keep it under 15 - 20 words per reply. 
+  Don't be too helpful.
 `;
 
 
 /**
  * @description - Return the literal string that deepseek responds back with.
  */
-// export async function deepseek(promptMessages) {
-//   console.log("What are the messages::: ", JSON.stringify(promptMessages));
-//   const completion = await openai.chat.completions.create({
-//     messages: [{ role: "system", content: PROMPT }, ...promptMessages],
-//     model: "deepseek-chat",
-//   });
-//   return completion.choices[0].message.content;
-// }
+export async function deepseek(promptMessages:OpenAI.Chat.Completions.ChatCompletionMessageParam[]):Promise<string> {
+  const completion = await openai.chat.completions.create({
+    messages: [{ role: "system", content: PROMPT }, ...promptMessages],
+    model: "deepseek-chat",
+  });
+  return completion.choices[0].message.content || '';
+}
 
 
 function getDB() {
@@ -54,20 +60,41 @@ function getDB() {
 }
 
 
-function chatDataToList(messages:{[messageId:string]:RoomMessage}):RoomMessage[] {
-  return Object.values(messages);
-}
-
-
 async function sendMessageToRoom(record:SQSRecord):Promise<void> {
 
   const body:SQSMessageBody = JSON.parse(record.body);
   const {roomId} = body
-  const messageList = await db.ref(`/chat/rooms/${roomId}/public/messages`).once('value');
-  console.log("Whats the message list", JSON.stringify(messageList));
-  // lets turn 
-  const extractedMessages = Object.values(messageList.val() || {});
-  console.log(extractedMessages);
+
+  const [messageList, botId, players] = await Promise.all([
+    db.ref(`/chat/rooms/${roomId}/public/messages`).once('value').then(snapshot => snapshot.val() || []),
+    db.ref(`/chat/rooms/${roomId}/restricted/botId`).once('value').then(snapshot => snapshot.val() || ''),
+    db.ref(`/chat/rooms/${roomId}/restricted/players`).once('value').then(snapshot => snapshot.val() || '')
+  ]);
+  const otherPlayer = Object.keys(players).filter(player => player !== botId)[0];
+  console.log({otherPlayer}, players);
+  const AIMessagePrompts:OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+
+  //process these into deepseek prompts
+  for(const message of Object.values(messageList) as RoomMessage[]) {
+    if(message.from === botId) {
+      AIMessagePrompts.push({role: 'assistant', content: message.message});
+    } else {
+      AIMessagePrompts.push({role: 'user', content: message.message});
+    }
+  }
+
+  const response = await deepseek(AIMessagePrompts);
+  console.log("Whats the message list", JSON.stringify(AIMessagePrompts));
+
+  await sleep(2000 + (Math.random() * 4000)); // simulate thinking time of 3-5 seconds
+  await db.ref(`/chat/rooms/${roomId}/public/messages`).push({
+    from: botId,
+    message: response,
+    created: Date.now()
+  } as RoomMessage);
+
+
+  await db.ref(`/chat/rooms/${roomId}/public/playerTurn`).set(otherPlayer);
 
 }
 
@@ -85,22 +112,8 @@ async function processMessages(messages:SQSRecord[]):Promise<void> {
  * 
  */
 export const handler = async (event: SQSEvent, _:Context)=> {
-
   try {
-    console.log("EVENT::: ", event);
-    // for(const record of event.Records) {
-    //   const body:SQSMessageBody =  JSON.parse(record.body);
-
-    // }
-
-    console.log("reading the processed messages:::");
     await processMessages(event.Records);
-
-    
-
-
-    // Put the requests into a deepseek-readable format
-
   } catch(error) {
     console.error(error);
   }

@@ -20,6 +20,7 @@ export async function POST(
         const {roomId} = await params;
         const validRequest = await guardRoom(roomId,body.from);
 
+        //perform the validation that you need.
         if(validRequest === false) {
             return NextResponse.json({data: "Don't be ruining other people's fun...."}, {status: 403});
         }
@@ -32,7 +33,7 @@ export async function POST(
 
 
         const otherplayer = Object.keys(players.val()).filter(userId => userId !== body.from)[0];
-        await firebase.ref(`/chat/rooms/${roomId}/public/playerTurn`).set(otherplayer);
+        // await firebase.ref(`/chat/rooms/${roomId}/public/playerTurn`).set(otherplayer);
 
         console.log("queuing bot with this message::: ", body.message, "from user: ", body.from, "in room: ", roomId);
         const queued = await queueBot(roomId);

@@ -1,4 +1,4 @@
-import { connectToRoom } from "@/lib/axios";
+import { connectToRoom, poll } from "@/lib/axios";
 import { onValue, ref, Unsubscribe } from "firebase/database";
 import { useEffect, useRef, useState } from "react";
 import chatClient from "@/lib/firebase";
@@ -10,12 +10,13 @@ export interface UseGameResult {
     roomId:string;
     userId: string;
     sendMessage: (message:string)=> Promise<void>;
-    connected:boolean;
     winner: boolean | undefined;
     playerGuess: END_STATES | undefined;
     guesserId: string | undefined;
     // anything else goes in here.
 }
+
+const POLL_INTERVAL_MS = 1500;
 
 function extractChat(room:ChatRoom['public']):RoomMessage[] {
     return Object.keys(room.messages || {}).map(k => room.messages![k]);
@@ -27,13 +28,20 @@ export default function useGame():UseGameResult {
     const [messages, setMessages] = useState<RoomMessage[]>([]);
     const [roomId, setRoomId] = useState<string>('');
     const [userId, setUserId] = useState<string>('');
-    const [connected, setConnected] = useState<boolean>(false);
     const connectionRef = useRef<boolean>(false);
     const unsubscribeRef= useRef<Unsubscribe | null>(null);
     // find the winner throughout the app.
     const [playerGuess, setPlayerGuess] = useState<END_STATES | undefined>();
     const [winner, setWinner] = useState<boolean | undefined>(false);
     const [guesserId, setGuesserId] = useState<string | undefined>(undefined);
+
+    // some extra state
+    const [gameReady, setGameReady] = useState<boolean>(false);
+
+    const [foo, setFoo] = useState<string>('');
+    
+    //some state for managing the session polling.
+    const [pollStart, setPollStart] = useState<boolean>(false);
 
     async function sendMessage(textMessage: string):Promise<void> {
         try {
@@ -47,8 +55,27 @@ export default function useGame():UseGameResult {
             console.error('Unable to send room message', error);
         }
     }
+
+
+    // Do polling for a room.
+    useEffect(()=> {
+        if(pollStart === false || !roomId) return;
+
+        const interval = setInterval( async ()=> {
+            console.log('polling')
+            void await poll(roomId);
+        }, POLL_INTERVAL_MS);
+
+        return ()=>{
+            if(interval)
+                clearInterval(interval);
+        };
+    },[pollStart, roomId]);
+
+
     
 
+    //TODO: Refactor this crap
     useEffect(()=> {
         // Prevent unnecessary connections even in dev mode.
         if(connectionRef.current) return;
@@ -76,10 +103,12 @@ export default function useGame():UseGameResult {
                     setWinner(!room.winner ? undefined : room.winner === userId);
                     setPlayerGuess(!room.playerGuess ? undefined : room.playerGuess);
                     setGuesserId(!room.guesserId ? undefined : room.guesserId);
-                    setConnected(true)
+                    setGameReady(room.gameReady);
+
+                    //Only start polling if game is not in a ready state.
+                    setPollStart(!room.gameReady);
                 }, console.error);
             } catch(error) {
-                setConnected(false);
                 console.error(error);
                 connectionRef.current = false;
             }
@@ -97,7 +126,6 @@ export default function useGame():UseGameResult {
         messages,
         roomId,
         userId,
-        connected,
         sendMessage,
         winner,
         playerGuess,
