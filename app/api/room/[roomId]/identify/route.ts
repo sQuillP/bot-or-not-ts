@@ -70,20 +70,23 @@ export async function POST(
         // assume winner is the guesser, and then flip if the guess is wrong.
         let winnerId:string = body.userId;
         let loserId:string = otherPlayer;
-        let endState:END_STATES;
+        const endState = body.guess === 'Bot' ? END_STATES.PLAYER_GUESS_BOT : END_STATES.PLAYER_GUESS_PLAYER;
+
         if(isBotRoom.val() !== true && body.guess === 'Bot') {
             // user guessed bot, but it was a human room. User loses.
             winnerId = otherPlayer;
             loserId = body.userId;
+        } else if(isBotRoom.val() === true && body.guess === 'Human') {
+            winnerId = otherPlayer;
+            loserId = body.userId;
+        }else if(isBotRoom.val() === false && body.guess === 'Bot') {
+            loserId = body.userId;
+            winnerId = otherPlayer;
+        } else if (isBotRoom.val() === false && body.guess === 'Human') {
+            loserId = otherPlayer;
+            winnerId = body.userId;
         }
-
-
         //TODO: just have player send end state and forget this thing.
-        if(body.guess === 'Human') {
-            endState = END_STATES.PLAYER_GUESS_PLAYER
-        } else {
-            endState = END_STATES.PLAYER_GUESS_BOT;
-        }
 
         const guess = firebase.ref(`/chat/rooms/${roomId}/public/playerGuess`).set(endState);
         const lock = firebase.ref(`/chat/rooms/${roomId}/public/gameFinished`).set(true);

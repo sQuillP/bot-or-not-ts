@@ -77,6 +77,15 @@ export default function GuessResultScreen({ winner = true, reason = END_STATES.P
                             </>
                         );
                     }
+
+                    if(!winner && reason === END_STATES.PLAYER_GUESS_PLAYER && guesserId === userId) {
+                        return (
+                            <>
+                                <CircleX size={iconSize} className={`${iconClasses} text-red-400`} />
+                                <p className={textClasses}>You have guessed incorrectly. Turns out they were a BOT!</p>
+                            </>
+                        )
+                    }
                     
                     return null;
                 })()}
