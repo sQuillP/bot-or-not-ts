@@ -16,11 +16,14 @@
   },
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.1031.0",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.104.0",
     "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^12.10.0",
     "firebase-admin": "^13.7.0",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.574.0",
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",
@@ -33,6 +36,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/aws-lambda": "^8.10.161",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

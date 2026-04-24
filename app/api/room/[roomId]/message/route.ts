@@ -3,6 +3,7 @@ import type { RoomMessage } from "@/types/server.types";
 import firebase from '@/lib/firebaseAdmin';
 import { guardRoom } from "./guards";
 import { queueBot } from "@/lib/sqs";
+import {auth} from '@/auth';
 
 interface MessageRouteParams {
     roomId:string;
@@ -16,6 +17,8 @@ export async function POST(
     request:NextRequest, 
     { params }: { params: Promise<MessageRouteParams> }):Promise<NextResponse> {
     try {
+        const session = await auth();
+        console.log('what s the session in the message route: ', session);
         const body:RoomMessage = await request.json();
         const {roomId} = await params;
         const validRequest = await guardRoom(roomId,body.from);
