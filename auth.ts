@@ -2,32 +2,35 @@ import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import { supabaseAdmin } from "@/lib/supabase";
 import jwt from 'jsonwebtoken';
+import { JWTPayload } from "./types/server.types";
 
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google],
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, profile, account }) {
 
       if (!user.id || !user.email) return false;
-      
+      // console.log({user, account, profile});
+
       const { error } = await supabaseAdmin
         .from('users')
         .upsert({
-          id: user.id,
+          id: profile?.sub?.toString(),
           email: user.email,
-          first_name: user.name,
+          name: user.name,
+          provider: account?.provider
         }, { onConflict: 'id' })
 
-        console.log(error);
 
+        console.log(error);
       return !error;
     },
 
     // 1. Create the JWT payload
-    async jwt({ token, user }) {
+    async jwt({ token, user, profile }) {
       if (user) {
-        token.id = user.id;
+        token.id = profile?.sub;
       }
       return token;
     },
@@ -36,11 +39,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       const signingSecret = process.env.SUPABASE_JWT_SECRET;
       if (signingSecret) {
-        const payload = {
+        const payload:JWTPayload = {
           aud: "authenticated",
           role: "authenticated",
-          email: token.email,
-          sub: token.id, 
+          email: token.email as string,
+          sub: token.id as string, 
           exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24),
         };
 

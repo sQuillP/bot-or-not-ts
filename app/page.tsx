@@ -48,8 +48,10 @@ export default function Home() {
               <Trophy className="inline-block mr-2" size={15} />
               View Leaderboard
           </Link>
-          <SignIn />
         </div>
+        <SignIn/>
+
+
       </section>
    </main>
   );

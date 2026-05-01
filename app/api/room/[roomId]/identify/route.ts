@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import firebase from '@/lib/firebaseAdmin';
 import { GuessIdentityRequest } from "@/types/request.types";
 import { END_STATES } from "@/types/server.types";
+import { supabaseAdmin } from "@/lib/supabase";
 
 
 const MIN_MESSAGES_BEFORE_GUESS = -1;
@@ -94,6 +95,28 @@ export async function POST(
         const guesser = firebase.ref(`/chat/rooms/${roomId}/public/guesserId`).set(body.userId);
 
         await Promise.all([guess, lock, winner, guesser]);
+
+
+        // grab the logged in users details from the chat room.
+        const users = await firebase.ref(`/chat/rooms/${roomId}/restricted/players`).once('value');
+
+        console.log("what are the users::: ", users.val());
+        const winQuery =  supabaseAdmin.from('users').select('win_count').eq('id', winnerId);
+        const loseQuery = supabaseAdmin.from('users').select('lose_count').eq('id', loserId)
+        const [winResult, loseResult] = await Promise.all([winQuery, loseQuery]);
+        console.log("whats the win result", winResult, loseResult);
+        
+        let winWrite, loseWrite;
+        if(winResult.data && winResult.data.length > 0) {
+             winWrite = supabaseAdmin.from('users').update({win_count: winResult.data[0].win_count + 1}).eq('id', winnerId);
+        }
+        if(loseResult.data && loseResult.data.length > 0) {
+             loseWrite = supabaseAdmin.from('users').update({lose_count: loseResult.data[0].lose_count + 1}).eq('id', loserId);
+        } 
+
+        await Promise.all([winWrite, loseWrite]);
+
+        
 
         return NextResponse.json({data: 'ok'}, {status: 200});
     } catch(error) {

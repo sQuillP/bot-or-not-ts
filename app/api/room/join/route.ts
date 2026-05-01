@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import database from '@/lib/firebaseAdmin';
 import crypto from 'crypto'
-import { ChatRoom } from "@/types/server.types";
+import { ChatRoom, JWTPayload } from "@/types/server.types";
+import { auth } from "@/auth";
+import { jwtDecode } from "@/lib/utils";
 
-
+interface UserConfig {
+    userId:string;
+    joined:ReturnType<typeof Date.prototype.toISOString>;
+}
 
 
 // Create a single room in firebase db.
-async function createRoom(generatedUserID:string, isBotRoom:boolean = false):Promise<string> {
+async function createRoom(userId:string, isBotRoom:boolean = false):Promise<string> {
     
     const roomRef = await database.ref('chat/rooms');
 
@@ -34,7 +39,7 @@ async function createRoom(generatedUserID:string, isBotRoom:boolean = false):Pro
             isBotRoom,
             lastMessageTimestamp: '',
             players: {
-                [generatedUserID]: {
+                [userId]: {
                     // more player information here
                     joined: new Date().toISOString()
                 },
@@ -154,9 +159,14 @@ export async function GET(_:NextRequest):Promise<NextResponse> {
 
     // Room is initialized now,
     try {
-        const userId = crypto.randomUUID();
-        console.log('user id that should be added', userId);
+        const session = await auth();
+        let userId = crypto.randomUUID().toString();
+        console.log('is there a session?', session);
 
+        if(session) {
+            const payload:JWTPayload = jwtDecode(session?.supabaseAccessToken);
+            userId = payload.sub as string;
+        }
 
         // TEST out bot functionality....
         const roomId = await createRoom(userId, false);

@@ -6,6 +6,14 @@ export enum END_STATES  {
     PLAYER_TIMEOUT = 'PLAYER_TIMEOUT',
 }
 
+export interface JWTPayload {
+    aud: string;
+    role: string;
+    email?:string;
+    sub?:string;
+    exp: number;    
+}
+
 
 // Message contract for a room.
 export interface RoomMessage {
@@ -43,7 +51,17 @@ export interface ChatRoom {
     }
 }
 
-
+export interface User {
+    id: string;
+    email:string;
+    win_count: number;
+    lose_count:number;
+    provider: string;
+    guess_correct: number;
+    guess_incorrect: number;
+    total_games: number;
+    name: string;
+}
 
 
 // client message
