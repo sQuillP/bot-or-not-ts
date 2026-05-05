@@ -1,6 +1,6 @@
 
 import { auth, signIn, signOut } from "@/auth"
-import { Check, LogOut, SquareArrowRightIcon } from "lucide-react";
+import { Check, LogOut } from "lucide-react";
  
 const Google = ()=> (
   <div>

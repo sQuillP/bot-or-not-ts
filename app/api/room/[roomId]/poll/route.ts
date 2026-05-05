@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import database from '@/lib/firebaseAdmin';
 import { ChatRoom } from "@/types/server.types";
+import firebase from '@/lib/firebaseAdmin';
 
 const MAX_CAPACITY = 2;
 
@@ -48,6 +49,38 @@ async function fillRoomWithBot(roomId:string):Promise<boolean> {
         return connected.committed;
 }
 
+export async function guardRoom(roomId:string, userId: string):Promise<boolean> {
+    try {
+
+        // grab the membership and room data in parallel
+        const [membership, roomData] = await Promise.all([
+            firebase.ref(`/chat/rooms/${roomId}/restricted/players/${userId}`).once('value'),
+            firebase.ref(`/chat/rooms/${roomId}/public`).once('value'),
+        ]);
+        const roomInfo:ChatRoom['public'] = roomData.val();
+        // Verify the membership of player, and make sure it's their turn.
+        // Otherwise, deny write access to the room.
+        // User may be able to read from the room for now, that poses
+        // no security threat to intruders necessarily.
+        return membership.exists() && roomInfo.gameReady && roomInfo.occupancy < 2;
+    } catch(error) {
+        console.error('Error verifying membership: ',error);
+        console.log('Unable to verify membership: ', userId, 'in room ', roomId);
+        return false;
+    }
+}
+
+async function validateRequest(roomId:string):Promise<boolean> {
+    const roomInfo = await database.ref(`chat/rooms/${roomId}`).once('value');
+
+    if(roomInfo.exists() === false) {
+        console.log("room does not exist. Cannot poll for bot.");
+        return false;
+    }
+
+
+    return true;
+}
 
 
 
@@ -57,6 +90,12 @@ async function fillRoomWithBot(roomId:string):Promise<boolean> {
  * 
  * TODO: 
  * PROTECT THIS ROUTE
+ * 
+ * Make sure that polling can only be done by users
+ * who belong to that room?
+ * 
+ * The entire point of polling is to just add a bot when polled
+ * enough times. 
  * @param _ 
  * @param param1 
  * @returns 
@@ -71,7 +110,7 @@ export async function GET(_:NextRequest,
 
     if(Math.random() < 3) {
         console.log('decided to fill room with a bot. Room id: ', roomId);
-        await fillRoomWithBot(roomId);
+        // await fillRoomWithBot(roomId);
         console.log("room is now filled with a bot...");
     }
 
